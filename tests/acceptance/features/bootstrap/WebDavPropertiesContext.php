@@ -312,7 +312,7 @@ class WebDavPropertiesContext implements Context {
 				$path,
 				'0',
 				$properties,
-				"public-files"
+				$this->featureContext->getDavPathVersion() === 1 ? "public-files" : "public-files-new"
 			)
 		);
 	}
@@ -753,6 +753,37 @@ class WebDavPropertiesContext implements Context {
 	}
 
 	/**
+	 * @Then /^the lock property item "([^"]*)" of (?:file|folder|entry) "([^"]*)" in response to public should match "([^"]*)"$/
+	 *
+	 * @param string $xpath
+	 * @param string $path
+	 * @param string $pattern
+	 *
+	 * @return void
+	 * @throws Exception
+	 */
+	public function publicGetsThePropertiesOfFolderAndAssertValueOfItemInResponseRegExp(string $xpath, string $path, string $pattern):void {
+		$user = (string) $this->featureContext->getLastShareData()->data->token;
+		$properties[] = "d:lockdiscovery";
+
+		$this->featureContext->setResponseXmlObject(
+			$this->featureContext->listFolderAndReturnResponseXml(
+				$user,
+				$path,
+				'0',
+				$properties,
+				$this->featureContext->getDavPathVersion() === 1 ? "public-files" : "public-files-new"
+			)
+		);
+		$this->featureContext->theHTTPStatusCodeShouldBe('200');
+		$this->assertValueOfItemInResponseToUserRegExp(
+			$xpath,
+			null,
+			$pattern
+		);
+	}
+
+	/**
 	 * @Then there should be an entry with href matching :pattern in the response to user :user
 	 *
 	 * @param string $pattern
@@ -829,6 +860,38 @@ class WebDavPropertiesContext implements Context {
 			$value,
 			"item \"$xpath\" found with value \"$value\", " .
 			"expected to match regex pattern: \"$pattern\""
+		);
+	}
+
+	/**
+	 * @Then /^the lock property item "([^"]*)" of (?:file|folder|entry) "([^"]*)" in response to user "([^"]*)" should match "([^"]*)"$/
+	 *
+	 * @param string $xpath
+	 * @param string $path
+	 * @param string|null $user
+	 * @param string $pattern
+	 *
+	 * @return void
+	 * @throws Exception
+	 */
+	public function userGetsPropertiesOfFolderAndAssertValueOfItemInResponseToUserRegExp(string $xpath, string $path, string $user, string $pattern):void {
+		$user = $this->featureContext->getActualUsername($user);
+		$properties[] = "d:lockdiscovery";
+
+		$this->featureContext->setResponseXmlObject(
+			$this->featureContext->listFolderAndReturnResponseXml(
+				$user,
+				$path,
+				"0",
+				$properties
+			)
+		);
+
+		$this->featureContext->theHTTPStatusCodeShouldBe('200');
+		$this->assertValueOfItemInResponseToUserRegExp(
+			$xpath,
+			$user,
+			$pattern
 		);
 	}
 
