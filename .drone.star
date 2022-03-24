@@ -480,7 +480,7 @@ def initialPipelines(ctx):
     return dependencies(ctx) + checkStarlark()
 
 def beforePipelines(ctx):
-    return codestyle() + changelog(ctx) + cancelPreviousBuilds() + phpstan() + phan()
+    return codestyle(ctx) + changelog(ctx) + cancelPreviousBuilds() + phpstan(ctx) + phan(ctx)
 
 def coveragePipelines(ctx):
     # All unit test pipelines that have coverage or other test analysis reported
@@ -593,7 +593,7 @@ def dependencies(ctx):
 
     return pipelines
 
-def codestyle():
+def codestyle(ctx):
     pipelines = []
 
     if "codestyle" not in config:
@@ -637,7 +637,8 @@ def codestyle():
                     "base": dir["base"],
                     "path": "src",
                 },
-                "steps": cacheRestore() +
+                "steps": skipIfUnchanged(ctx, "lint") +
+                         cacheRestore() +
                          composerInstall(phpVersion) +
                          vendorbinCodestyle(phpVersion) +
                          vendorbinCodesniffer(phpVersion) +
@@ -786,7 +787,7 @@ def cancelPreviousBuilds():
         },
     }]
 
-def phpstan():
+def phpstan(ctx):
     pipelines = []
 
     if "phpstan" not in config:
@@ -831,7 +832,8 @@ def phpstan():
                     "base": dir["base"],
                     "path": "src",
                 },
-                "steps": cacheRestore() +
+                "steps": skipIfUnchanged(ctx, "lint") +
+                         cacheRestore() +
                          composerInstall(phpVersion) +
                          vendorbinPhpstan(phpVersion) +
                          installServer(phpVersion, "sqlite", params["logLevel"]) +
@@ -858,7 +860,7 @@ def phpstan():
 
     return pipelines
 
-def phan():
+def phan(ctx):
     pipelines = []
 
     if "phan" not in config:
@@ -903,7 +905,7 @@ def phan():
                     "base": dir["base"],
                     "path": "src",
                 },
-                "steps": cacheRestore() +
+                "steps": skipIfUnchanged(ctx, "lint") + cacheRestore() +
                          composerInstall(phpVersion) +
                          vendorbinPhan(phpVersion) +
                          installServer(phpVersion, "sqlite", params["logLevel"]) +
@@ -1872,6 +1874,7 @@ def sonarAnalysis(ctx, phpVersion = "7.4"):
                          ],
                      },
                  ] +
+                 skipIfUnchanged(ctx, "unit-tests") +
                  cacheRestore() +
                  composerInstall(phpVersion) +
                  yarnInstall() +
