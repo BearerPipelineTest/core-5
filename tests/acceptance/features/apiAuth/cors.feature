@@ -1,5 +1,5 @@
 @api @issue-ocis-reva-26 @issue-ocis-reva-27
-Feature: CORS headers
+Feature: CORS headers test
 
   Background:
     Given user "Alice" has been created with default attributes and without skeleton files
