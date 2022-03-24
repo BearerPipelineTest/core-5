@@ -100,31 +100,25 @@ Feature: share resources where the sharee receives the share in multiple ways
     And user "Brian" has uploaded file with content "First data" to "/randomfile.txt"
     And user "Carol" has uploaded file with content "Second data" to "/randomfile.txt"
     When user "Brian" shares file "randomfile.txt" with user "Alice" with permissions "read" using the sharing API
-    And user "Alice" gets the info of the last share using the sharing API
-    Then the OCS status code of responses on all endpoints should be "<ocs_status_code>"
-    And the HTTP status code of responses on all endpoints should be "200"
-    And the fields of the last response about user "Brian" sharing with user "Alice" should include
-      | uid_owner   | %username%      |
-      | share_with  | %username%      |
-      | file_target | /randomfile.txt |
-      | item_type   | file            |
-      | permissions | read            |
+    Then as user "Alice" the info of the last share about user "Brian" with user "Alice" should include
+      | uid_owner       | %username%        |
+      | share_with      | %username%        |
+      | file_target     | /randomfile.txt   |
+      | item_type       | file              |
+      | permissions     | read              |
     When user "Carol" shares file "randomfile.txt" with user "Alice" with permissions "read,update" using the sharing API
-    And user "Alice" gets the info of the last share using the sharing API
-    Then the OCS status code of responses on all endpoints should be "<ocs_status_code>"
-    And the HTTP status code of responses on all endpoints should be "200"
-    And the fields of the last response about user "Carol" sharing with user "Alice" should include
-      | uid_owner   | %username%          |
-      | share_with  | %username%          |
-      | file_target | /randomfile (2).txt |
-      | item_type   | file                |
-      | permissions | read,update         |
+    Then as user "Alice" the info of the last share about user "Carol" with user "Alice" should include
+      | uid_owner       | %username%          |
+      | share_with      | %username%          |
+      | file_target     | /randomfile (2).txt |
+      | item_type       | file                |
+      | permissions     | read,update         |
     And the content of file "randomfile.txt" for user "Alice" should be "First data"
     And the content of file "randomfile (2).txt" for user "Alice" should be "Second data"
     Examples:
-      | ocs_api_version | ocs_status_code |
-      | 1               | 100             |
-      | 2               | 200             |
+      | ocs_api_version |
+      | 1               |
+      | 2               |
 
   @issue-ocis-2131
   Scenario Outline: multiple users share a folder with the same name to a user
@@ -138,31 +132,25 @@ Feature: share resources where the sharee receives the share in multiple ways
     And user "Carol" has created folder "/zzzfolder"
     And user "Carol" has created folder "zzzfolder/Carol"
     When user "Brian" shares folder "zzzfolder" with user "Alice" with permissions "read,delete" using the sharing API
-    And user "Alice" gets the info of the last share using the sharing API
-    Then the OCS status code of responses on all endpoints should be "<ocs_status_code>"
-    And the HTTP status code of responses on all endpoints should be "200"
-    And the fields of the last response about user "Brian" sharing with user "Alice" should include
-      | uid_owner   | %username%  |
-      | share_with  | %username%  |
-      | file_target | /zzzfolder  |
-      | item_type   | folder      |
-      | permissions | read,delete |
+    Then as user "Alice" the info of the last share about user "Brian" with user "Alice" should include
+      | uid_owner       | %username%        |
+      | share_with      | %username%        |
+      | file_target     | /zzzfolder        |
+      | item_type       | folder            |
+      | permissions     | read,delete       |
     When user "Carol" shares folder "zzzfolder" with user "Alice" with permissions "read,share" using the sharing API
-    And user "Alice" gets the info of the last share using the sharing API
-    Then the OCS status code of responses on all endpoints should be "<ocs_status_code>"
-    And the HTTP status code of responses on all endpoints should be "200"
-    And the fields of the last response about user "Carol" sharing with user "Alice" should include
-      | uid_owner   | %username%     |
-      | share_with  | %username%     |
-      | file_target | /zzzfolder (2) |
-      | item_type   | folder         |
-      | permissions | read,share     |
+    Then as user "Alice" the info of the last share about user "Carol" with user "Alice" should include
+      | uid_owner       | %username%        |
+      | share_with      | %username%        |
+      | file_target     | /zzzfolder (2)    |
+      | item_type       | folder            |
+      | permissions     | read,share        |
     And as "Alice" folder "zzzfolder/Brian" should exist
     And as "Alice" folder "zzzfolder (2)/Carol" should exist
     Examples:
-      | ocs_api_version | ocs_status_code |
-      | 1               | 100             |
-      | 2               | 200             |
+      | ocs_api_version |
+      | 1               |
+      | 2               |
 
   @skipOnEncryptionType:user-keys @encryption-issue-132 @skipOnLDAP
   Scenario Outline: share with a group and then add a user to that group that already has a file with the shared name

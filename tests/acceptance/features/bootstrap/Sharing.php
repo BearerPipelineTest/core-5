@@ -1920,35 +1920,35 @@ trait Sharing {
 	}
 
 	/**
-	 * @Then /^the info about the last share by user "([^"]*)" with (user|group) "([^"]*)" should include$/
+	 * @Then /^as user "([^"]*)" the info of the last share about user "([^"]*)" with (user|group) "([^"]*)" should include$/
 	 *
+	 * @param string $requester
 	 * @param string $sharer
-	 * @param string $userOrGroup
+	 * @param string $userOrGroupShareType
 	 * @param string $sharee
 	 * @param TableNode $table
 	 *
 	 * @return void
 	 * @throws Exception
 	 */
-	public function theInfoAboutTheLastShareByUserWithUserShouldInclude(
+	public function asUserTheInfoOfLastShareAboutUserSharingWithShouldInclude(
+		string $requester,
 		string $sharer,
-		string $userOrGroup,
+		string $userOrGroupShareType,
 		string $sharee,
 		TableNode $table
-	):void {
-		$this->userGetsInfoOfLastShareUsingTheSharingApi($sharer);
-		$rows = $table->getRows();
-		$infoTable = [];
-		for ($index = 0; $index < \count($rows); $index++) {
-			if ($rows[$index][0] === "ocs_status_code") {
-				$this->ocsContext->theOCSStatusCodeShouldBe($rows[$index][1]);
-			} elseif ($rows[$index][0] === "http_status_code") {
-				$this->thenTheHTTPStatusCodeShouldBe($rows[$index][1]);
-			} else {
-				$infoTable[$index] = $rows[$index];
-			}
-		}
-		$table = new TableNode($infoTable);
+	) {
+		$this->userGetsInfoOfLastShareUsingTheSharingApi($requester);
+		$this->theHTTPStatusCodeShouldBe(
+			200,
+			__METHOD__ . ": could not fetch information of the last share for user $requester"
+		);
+		$ocsVersion = $this->getOcsApiVersion();
+		$expectedOcsVersion = ($ocsVersion === 1) ? "100" : "200";
+		$this->ocsContext->theOCSStatusCodeShouldBe(
+			$expectedOcsVersion,
+			__METHOD__ . ": could not fetch information of the last share for user $requester"
+		);
 		$this->checkFieldsOfLastResponseToUser($sharer, $sharee, $table);
 	}
 
@@ -3116,23 +3116,6 @@ trait Sharing {
 
 	/**
 	 * @Given /^user "([^"]*)" has accepted the (?:first|next|) pending share "([^"]*)" offered by user "([^"]*)"$/
-	 *
-	 * @param string $user
-	 * @param string $share
-	 * @param string $offeredBy
-	 *
-	 * @return void
-	 * @throws Exception
-	 */
-	public function userHasAcceptedThePendingShareOfferedBy($user, $share, $offeredBy) {
-		$this->userAcceptsThePendingShareOfferedBy($user, $share, $offeredBy);
-		$this->theHTTPStatusCodeShouldBe(
-			200,
-			__METHOD__ . " could not accept the pending share $share to $user by $offeredBy"
-		);
-	}
-
-	/**
 	 * @Then /^user "([^"]*)" should be able to accept pending share "([^"]*)" offered by user "([^"]*)"$/
 	 *
 	 * @param string $user
@@ -3142,12 +3125,20 @@ trait Sharing {
 	 * @return void
 	 * @throws Exception
 	 */
-	public function userShouldBeAbleToAcceptShareOfferedBy(
-		string $user,
-		string $share,
-		string $offeredBy
-	) {
-		$this->userHasAcceptedThePendingShareOfferedBy($user, $share, $offeredBy);
+	public function userHasAcceptedThePendingShareOfferedBy(string $user, string $share, string $offeredBy) {
+		$this->userAcceptsThePendingShareOfferedBy($user, $share, $offeredBy);
+		$currentOCSVersion = $this->getOcsApiVersion();
+		$expectedOcsVersion = ($currentOCSVersion === 1) ? "100" : "200";
+		$this->theHTTPStatusCodeShouldBe(
+			200,
+			__METHOD__ . " could not accept the pending share $share to $user by $offeredBy"
+		);
+		$this->ocsContext->theOCSStatusCodeShouldBe(
+			$expectedOcsVersion,
+			__METHOD__ . " could not accept the pending share $share to $user by $offeredBy"
+		);
+		$this->emptyLastHTTPStatusCodesArray();
+		$this->emptyLastOCSStatusCodesArray();
 	}
 
 	/**
